@@ -1,2 +1,3 @@
 # Falling-Blocks
-Created a simple game in Python using pygame. Used it to practice OOP concepts.
+A game I made in pyhton, when I sarted learning it.
+This was also an exercise in learning some OOP concepts.
