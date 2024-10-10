@@ -1,150 +1,186 @@
 import pygame
 import random
 import sys
+from enum import Enum
 
 
-
-# Initializing pygame
-pygame.init()
-
-
-
-# Window resolution
-WIDTH = 1024
-HEIGHT = 768
+class GameState(Enum):
+    MENU = 0
+    PLAYING = 1
+    GAME_OVER = 2
 
 
-
-# Color Grid
-RED = (178,34,34)
-BLUE = (65,105,225)
-YELLOW = (255,255,0)
-BACKGROUND_COLOR = (139,137,137)
-
-
-
-# Player block Size and Position
-player_size = 50
-player_pos = [WIDTH/2, HEIGHT-2*player_size]
+class Colors:
+    RED = (178, 34, 34)
+    BLUE = (65, 105, 225)
+    YELLOW = (255, 255, 0)
+    GREEN = (0, 255, 0)
+    WHITE = (255, 255, 255)
+    BACKGROUND = (139, 137, 137)
 
 
-# Block size position and list 
-block_size = 50
-block_position = [random.randint(0,WIDTH-block_size), 0]
-block_list = [block_position]
+class Config:
+    WIDTH = 1920
+    HEIGHT = 1080
+    FPS = 60
+    PLAYER_SIZE = 50
+    BLOCK_SIZE = 50
+    INITIAL_SPEED = 5
 
 
-# Game speed
-SPEED = 10
+class Player:
+    def __init__(self):
+        self.size = Config.PLAYER_SIZE
+        self.reset_position()
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    def reset_position(self):
+        self.pos = [Config.WIDTH // 2, Config.HEIGHT - 2 * self.size]
 
-game_over = False
+    def move(self, direction):
+        self.pos[0] = max(0, min(Config.WIDTH - self.size,
+                                 self.pos[0] + direction * self.size))
 
-score = 0
-
-clock = pygame.time.Clock()
-
-
-# Font style for the game
-font_style = pygame.font.SysFont("monospace", 35)
-
-
-# Level and speed increases as player advances
-def set_level(score, SPEED):
-	''' This function sets the speed and score '''
-	if score < 20:
-		SPEED = 5
-	elif score < 40:
-		SPEED = 8
-	elif score < 60:
-		SPEED = 12
-	else:
-		SPEED = 15
-	return SPEED
-	# SPEED = score/5 + 1
-
-# Function for falling blocks, which is random
-def block_fall(block_list):
-	''' This function regulates how the blocks fall '''
-	delay = random.random()
-	if len(block_list) < 10 and delay < 0.1:
-		x_pos = random.randint(0,WIDTH-block_size)
-		y_pos = 0
-		block_list.append([x_pos, y_pos])
-# Funciton to draw
-def draw_block(block_list):
-	''' This function generates blocks '''
-	for block_position in block_list:
-		pygame.draw.rect(screen, BLUE, (block_position[0], block_position[1], block_size, block_size))
-
-def update_block_positionitions(block_list, score):
-	''' This function updates the position, increases the speed and keeps trach of score counter '''
-	for idx, block_position in enumerate(block_list):
-		if block_position[1] >= 0 and block_position[1] < HEIGHT:
-			block_position[1] += SPEED
-		else:
-			block_list.pop(idx)
-			score += 1
-	return score
-
-def check_impact(block_list, player_pos):
-	''' This funcion checks for impact with other blocks'''
-	for block_position in block_list:
-		if find_impact(block_position, player_pos):
-			return True
-	return False
-
-def find_impact(player_pos, block_position):
-	''' This fucntions finds the impact and terminates the game'''
-	p_x = player_pos[0]
-	p_y = player_pos[1]
-
-	e_x = block_position[0]
-	e_y = block_position[1]
-
-	if (e_x >= p_x and e_x < (p_x + player_size)) or (p_x >= e_x and p_x < (e_x+block_size)):
-		if (e_y >= p_y and e_y < (p_y + player_size)) or (p_y >= e_y and p_y < (e_y+block_size)):
-			return True
-	return False
-
-while not game_over:
-
-	for event in pygame.event.get():
-		if event.type == pygame.QUIT:
-			sys.exit()
-
-		if event.type == pygame.KEYDOWN:
-
-			x = player_pos[0]
-			y = player_pos[1]
-
-			if event.key == pygame.K_LEFT:
-				x -= player_size
-			elif event.key == pygame.K_RIGHT:
-				x += player_size
-
-			player_pos = [x,y]
-
-	screen.fill(BACKGROUND_COLOR)
-	
-	block_fall(block_list)
-	score = update_block_positionitions(block_list, score)
-	SPEED = set_level(score, SPEED)
-
-	text = "Score:" + str(score) 
-	label = font_style.render(text, 1, YELLOW)
-	screen.blit(label, (WIDTH-200, HEIGHT-40))
+    def draw(self, screen):
+        pygame.draw.rect(screen, Colors.RED,
+                         (self.pos[0], self.pos[1], self.size, self.size))
 
 
-	if check_impact(block_list, player_pos):
-		game_over = True
-		break
+class Block:
+    def __init__(self):
+        self.size = Config.BLOCK_SIZE
+        self.reset()
 
-	draw_block(block_list)
+    def reset(self):
+        self.pos = [random.randint(0, Config.WIDTH - self.size), 0]
 
-	pygame.draw.rect(screen, RED, (player_pos[0], player_pos[1], player_size, player_size))
+    def update(self, speed):
+        self.pos[1] += speed
 
-	clock.tick(30)
+    def is_off_screen(self):
+        return self.pos[1] >= Config.HEIGHT
 
-	pygame.display.update()
+    def draw(self, screen):
+        pygame.draw.rect(screen, Colors.BLUE,
+                         (self.pos[0], self.pos[1], self.size, self.size))
+
+
+class Game:
+    def __init__(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode((Config.WIDTH, Config.HEIGHT))
+        pygame.display.set_caption("Falling Blocks")
+        self.clock = pygame.time.Clock()
+        self.font = pygame.font.SysFont("monospace", 35)
+        self.big_font = pygame.font.SysFont("monospace", 70)
+
+        self.player = Player()
+        self.blocks = []
+        self.reset_game()
+
+        self.state = GameState.MENU
+
+    def reset_game(self):
+        self.player.reset_position()
+        self.blocks.clear()
+        self.score = 0
+        self.speed = Config.INITIAL_SPEED
+
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+
+            if event.type == pygame.KEYDOWN:
+                if self.state == GameState.PLAYING:
+                    if event.key == pygame.K_LEFT:
+                        self.player.move(-1)
+                    elif event.key == pygame.K_RIGHT:
+                        self.player.move(1)
+                    elif event.key == pygame.K_ESCAPE:
+                        self.state = GameState.MENU
+                elif event.key == pygame.K_SPACE:
+                    if self.state == GameState.MENU:
+                        self.state = GameState.PLAYING
+                    elif self.state == GameState.GAME_OVER:
+                        self.reset_game()
+                        self.state = GameState.PLAYING
+        return True
+
+    def update(self):
+        if self.state != GameState.PLAYING:
+            return
+
+        # Spawn new blocks
+        if len(self.blocks) < 10 and random.random() < 0.1:
+            self.blocks.append(Block())
+
+        # Update blocks and check for scoring
+        for block in self.blocks[:]:
+            block.update(self.speed)
+            if block.is_off_screen():
+                self.blocks.remove(block)
+                self.score += 1
+
+        # Update speed based on score
+        self.speed = 5 + (self.score // 10)
+
+        # Check for collisions
+        player_rect = pygame.Rect(self.player.pos[0], self.player.pos[1],
+                                  self.player.size, self.player.size)
+        for block in self.blocks:
+            block_rect = pygame.Rect(block.pos[0], block.pos[1],
+                                     block.size, block.size)
+            if player_rect.colliderect(block_rect):
+                self.state = GameState.GAME_OVER
+
+    def draw(self):
+        self.screen.fill(Colors.BACKGROUND)
+
+        if self.state == GameState.MENU:
+            self.draw_text("FALLING BLOCKS", self.big_font, Colors.YELLOW,
+                           Config.WIDTH // 2, Config.HEIGHT // 3)
+            self.draw_text("Press SPACE to start", self.font, Colors.WHITE,
+                           Config.WIDTH // 2, Config.HEIGHT // 2)
+        elif self.state == GameState.GAME_OVER:
+            self.draw_text("GAME OVER", self.big_font, Colors.RED,
+                           Config.WIDTH // 2, Config.HEIGHT // 3)
+            self.draw_text(f"Final Score: {self.score}", self.font, Colors.WHITE,
+                           Config.WIDTH // 2, Config.HEIGHT // 2)
+            self.draw_text("Press SPACE to restart", self.font, Colors.WHITE,
+                           Config.WIDTH // 2, Config.HEIGHT * 2 // 3)
+
+        if self.state != GameState.MENU:
+            self.player.draw(self.screen)
+            for block in self.blocks:
+                block.draw(self.screen)
+
+            score_text = f"Score: {self.score}"
+            level_text = f"Level: {self.speed - 4}"
+            self.draw_text(score_text, self.font, Colors.YELLOW,
+                           Config.WIDTH - 100, 30)
+            self.draw_text(level_text, self.font, Colors.GREEN,
+                           Config.WIDTH - 100, 70)
+
+        pygame.display.flip()
+
+    def draw_text(self, text, font, color, x, y):
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect()
+        text_rect.centerx = x
+        text_rect.y = y
+        self.screen.blit(text_surface, text_rect)
+
+    def run(self):
+        running = True
+        while running:
+            running = self.handle_events()
+            self.update()
+            self.draw()
+            self.clock.tick(Config.FPS)
+
+        pygame.quit()
+
+
+if __name__ == "__main__":
+    game = Game()
+    game.run()
