@@ -12,17 +12,17 @@ class GameState(Enum):
 
 
 class Colors:
-    RED = (178, 34, 34)
-    BLUE = (65, 105, 225)
-    YELLOW = (255, 255, 0)
-    GREEN = (0, 255, 0)
-    WHITE = (255, 255, 255)
-    BACKGROUND = (139, 137, 137)
+    CORAL = (255, 127, 80)
+    TEAL = (0, 128, 128)
+    MUSTARD = (255, 204, 0)
+    MINT = (152, 255, 152)
+    OFF_WHITE = (245, 245, 245)
+    BACKGROUND = (40, 44, 52)
 
 
 class Config:
-    WIDTH = 1920
-    HEIGHT = 1080
+    WIDTH = 1280
+    HEIGHT = 720
     FPS = 60
     PLAYER_SIZE = 50
     BLOCK_SIZE = 50
@@ -50,7 +50,7 @@ class Player:
         self.pos[0] = max(0, min(Config.WIDTH - self.size, self.pos[0] + self.velocity))
 
     def draw(self, screen):
-        pygame.draw.rect(screen, Colors.RED, (self.pos[0], self.pos[1], self.size, self.size))
+        pygame.draw.rect(screen, Colors.CORAL, (self.pos[0], self.pos[1], self.size, self.size))
 
 
 class Block:
@@ -68,7 +68,7 @@ class Block:
         return self.pos[1] >= Config.HEIGHT
 
     def draw(self, screen):
-        pygame.draw.rect(screen, Colors.BLUE, (self.pos[0], self.pos[1], self.size, self.size))
+        pygame.draw.rect(screen, Colors.TEAL, (self.pos[0], self.pos[1], self.size, self.size))
 
 
 class Game:
@@ -159,15 +159,15 @@ class Game:
         self.screen.fill(Colors.BACKGROUND)
 
         if self.state == GameState.MENU:
-            self.draw_text("FALLING BLOCKS", self.big_font, Colors.YELLOW, Config.WIDTH // 2, Config.HEIGHT // 3)
-            self.draw_text("Press SPACE to start", self.font, Colors.WHITE, Config.WIDTH // 2, Config.HEIGHT // 2)
+            self.draw_text("FALLING BLOCKS", self.big_font, Colors.MUSTARD, Config.WIDTH // 2, Config.HEIGHT // 3)
+            self.draw_text("Press SPACE to start", self.font, Colors.OFF_WHITE, Config.WIDTH // 2, Config.HEIGHT // 2)
         elif self.state == GameState.GAME_OVER:
-            self.draw_text("GAME OVER", self.big_font, Colors.RED, Config.WIDTH // 2, Config.HEIGHT // 3)
-            self.draw_text(f"Final Score: {self.score}", self.font, Colors.WHITE, Config.WIDTH // 2, Config.HEIGHT // 2)
-            self.draw_text("Press SPACE to restart", self.font, Colors.WHITE, Config.WIDTH // 2, Config.HEIGHT * 2 // 3)
+            self.draw_text("GAME OVER", self.big_font, Colors.CORAL, Config.WIDTH // 2, Config.HEIGHT // 3)
+            self.draw_text(f"Final Score: {self.score}", self.font, Colors.OFF_WHITE, Config.WIDTH // 2, Config.HEIGHT // 2)
+            self.draw_text("Press SPACE to restart", self.font, Colors.OFF_WHITE, Config.WIDTH // 2, Config.HEIGHT * 2 // 3)
         elif self.state == GameState.PAUSED:
-            self.draw_text("PAUSED", self.big_font, Colors.YELLOW, Config.WIDTH // 2, Config.HEIGHT // 3)
-            self.draw_text("Press P to resume", self.font, Colors.WHITE, Config.WIDTH // 2, Config.HEIGHT // 2)
+            self.draw_text("PAUSED", self.big_font, Colors.MUSTARD, Config.WIDTH // 2, Config.HEIGHT // 3)
+            self.draw_text("Press P to resume", self.font, Colors.OFF_WHITE, Config.WIDTH // 2, Config.HEIGHT // 2)
 
         if self.state in (GameState.PLAYING, GameState.PAUSED, GameState.GAME_OVER):
             self.player.draw(self.screen)
@@ -177,9 +177,9 @@ class Game:
             score_text = f"Score: {self.score}"
             level_text = f"Level: {self.speed - 4}"
             lives_text = f"Lives: {self.lives}"
-            self.draw_text(score_text, self.font, Colors.YELLOW, Config.WIDTH - 100, 30)
-            self.draw_text(level_text, self.font, Colors.GREEN, Config.WIDTH - 100, 70)
-            self.draw_text(lives_text, self.font, Colors.RED, Config.WIDTH - 100, 110)
+            self.draw_text(score_text, self.font, Colors.MUSTARD, Config.WIDTH - 100, 30)
+            self.draw_text(level_text, self.font, Colors.MINT, Config.WIDTH - 100, 70)
+            self.draw_text(lives_text, self.font, Colors.CORAL, Config.WIDTH - 100, 110)
 
         pygame.display.flip()
 
