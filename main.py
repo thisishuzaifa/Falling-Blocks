@@ -2,6 +2,7 @@ import pygame
 import random
 import sys
 from enum import Enum
+import asyncio
 
 
 class GameState(Enum):
@@ -123,6 +124,20 @@ class Game:
                     if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                         self.player.stop()
 
+            # Add touch controls for mobile web
+            if event.type == pygame.FINGERDOWN:
+                if self.state == GameState.PLAYING:
+                    if event.x < 0.5:
+                        self.player.move(-1)
+                    else:
+                        self.player.move(1)
+                elif self.state in [GameState.MENU, GameState.GAME_OVER]:
+                    self.state = GameState.PLAYING
+
+            if event.type == pygame.FINGERUP:
+                if self.state == GameState.PLAYING:
+                    self.player.stop()
+
         return True
 
     def update(self):
@@ -163,8 +178,10 @@ class Game:
             self.draw_text("Press SPACE to start", self.font, Colors.OFF_WHITE, Config.WIDTH // 2, Config.HEIGHT // 2)
         elif self.state == GameState.GAME_OVER:
             self.draw_text("GAME OVER", self.big_font, Colors.CORAL, Config.WIDTH // 2, Config.HEIGHT // 3)
-            self.draw_text(f"Final Score: {self.score}", self.font, Colors.OFF_WHITE, Config.WIDTH // 2, Config.HEIGHT // 2)
-            self.draw_text("Press SPACE to restart", self.font, Colors.OFF_WHITE, Config.WIDTH // 2, Config.HEIGHT * 2 // 3)
+            self.draw_text(f"Final Score: {self.score}", self.font, Colors.OFF_WHITE, Config.WIDTH // 2,
+                           Config.HEIGHT // 2)
+            self.draw_text("Press SPACE to restart", self.font, Colors.OFF_WHITE, Config.WIDTH // 2,
+                           Config.HEIGHT * 2 // 3)
         elif self.state == GameState.PAUSED:
             self.draw_text("PAUSED", self.big_font, Colors.MUSTARD, Config.WIDTH // 2, Config.HEIGHT // 3)
             self.draw_text("Press P to resume", self.font, Colors.OFF_WHITE, Config.WIDTH // 2, Config.HEIGHT // 2)
@@ -190,17 +207,22 @@ class Game:
         text_rect.y = y
         self.screen.blit(text_surface, text_rect)
 
-    def run(self):
+    async def run(self):
         running = True
         while running:
             running = self.handle_events()
             self.update()
             self.draw()
             self.clock.tick(Config.FPS)
+            await asyncio.sleep(0)  # Required for web compatibility
 
         pygame.quit()
 
 
-if __name__ == "__main__":
+async def main():
     game = Game()
-    game.run()
+    await game.run()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
