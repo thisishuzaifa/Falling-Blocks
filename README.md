@@ -17,3 +17,6 @@ A simple game where you have to fall through a series of blocks.
 - P: Pause the game
 - Escape: Quit the game
 
+
+
+//TODO: Use WASM to host on web somewhere
