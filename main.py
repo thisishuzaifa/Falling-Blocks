@@ -63,6 +63,8 @@ class Config:
     MAGNET_RADIUS = 200
     PARTICLE_LIFE = 30
     ANIMATION_SPEED = 0.1
+    MIN_WIDTH = 1280  # Minimum width
+    MIN_HEIGHT = 720  # Minimum height
 
 
 class Particle:
@@ -429,7 +431,9 @@ class DummySound:
 class Game:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((Config.WIDTH, Config.HEIGHT))
+        
+        # For web compatibility, use resizable mode
+        self.screen = pygame.display.set_mode((Config.WIDTH, Config.HEIGHT), pygame.RESIZABLE)
         pygame.display.set_caption("Falling Blocks - Enhanced")
         self.clock = pygame.time.Clock()
         
@@ -440,17 +444,20 @@ class Game:
         self.big_font = pygame.font.Font(default_font, 70)
         self.small_font = pygame.font.Font(default_font, 20)
         
+        # Initialize game components
+        self.init_game()
+    
+    def init_game(self):
         self.player = Player()
         self.blocks = []
         self.particles = []
         self.sounds = SoundEffects.generate_sounds()
         self.high_scores = [0] * Config.HIGH_SCORES_COUNT
         self.load_high_scores()
-        self.menu_offset = 0  # For menu animation
-        self.shake_amount = 0  # For screen shake
-        self.slow_mo_factor = 1.0  # For slow motion effect
-        self.magnet_enabled = False  # For magnet power-up
-        self.reset_game()
+        self.menu_offset = 0
+        self.shake_amount = 0
+        self.slow_mo_factor = 1.0
+        self.magnet_enabled = False
         
         # Background stars
         self.stars = []
@@ -458,10 +465,11 @@ class Game:
             self.stars.append([
                 random.randint(0, Config.WIDTH),
                 random.randint(0, Config.HEIGHT),
-                random.uniform(0.2, 1.0),  # Size
-                random.choice([Colors.OFF_WHITE, Colors.LIGHT_BLUE, Colors.MINT])  # Color
+                random.uniform(0.2, 1.0),
+                random.choice([Colors.OFF_WHITE, Colors.LIGHT_BLUE, Colors.MINT])
             ])
         
+        self.reset_game()
         self.state = GameState.MENU
 
     def load_high_scores(self):
@@ -506,6 +514,20 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
+                
+            # Handle window resize
+            if event.type == pygame.VIDEORESIZE:
+                width = max(event.w, Config.MIN_WIDTH)  # Minimum width
+                height = max(event.h, Config.MIN_HEIGHT)  # Minimum height
+                self.screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+                # Update game dimensions
+                scale_x = width / Config.WIDTH
+                scale_y = height / Config.HEIGHT
+                Config.WIDTH = width
+                Config.HEIGHT = height
+                # Update player position
+                self.player.pos[0] *= scale_x
+                self.player.pos[1] = Config.HEIGHT - 2 * self.player.size
 
             if event.type == pygame.KEYDOWN:
                 if self.state == GameState.PLAYING:
@@ -705,20 +727,20 @@ class Game:
         
         if self.state == GameState.MENU:
             # Animated title
-            title_y = Config.HEIGHT // 4 + math.sin(self.menu_offset * 0.05) * 10
+            title_y = Config.HEIGHT // 6 + math.sin(self.menu_offset * 0.05) * 10
             self.draw_text("FALLING BLOCKS", self.big_font, Colors.MUSTARD, Config.WIDTH // 2, title_y)
             
             # Menu options with pulsing effect
             pulse = 0.7 + 0.3 * math.sin(self.menu_offset * 0.1)
             option_color = tuple(int(c * pulse) for c in Colors.OFF_WHITE)
             
-            self.draw_text("Press SPACE to start", self.font, option_color, Config.WIDTH // 2, Config.HEIGHT // 4 + 80)
-            self.draw_text("Press H for high scores", self.font, option_color, Config.WIDTH // 2, Config.HEIGHT // 4 + 130)
+            self.draw_text("Press SPACE to start", self.font, option_color, Config.WIDTH // 2, Config.HEIGHT // 6 + 80)
+            self.draw_text("Press H for high scores", self.font, option_color, Config.WIDTH // 2, Config.HEIGHT // 6 + 130)
             
             # Game instructions
-            help_y = Config.HEIGHT // 2
-            help_bg = pygame.Surface((Config.WIDTH - 200, 280), pygame.SRCALPHA)
-            help_bg.fill((0, 0, 0, 128))
+            help_y = Config.HEIGHT // 2 + 50  # Moved down to avoid overlap
+            help_bg = pygame.Surface((Config.WIDTH - 200, 300), pygame.SRCALPHA)  # Made taller
+            help_bg.fill((0, 0, 0, 180))  # Made more opaque
             self.screen.blit(help_bg, (100, help_y - 20))
             
             self.draw_text("HOW TO PLAY", self.font, Colors.MINT, Config.WIDTH // 2, help_y)
@@ -726,25 +748,25 @@ class Game:
             # Draw block examples and their explanations
             block_x = Config.WIDTH // 4
             text_x = block_x + 180
-            spacing = 45
+            spacing = 50  # Increased spacing
             
             # Normal block
             block = Block(BlockType.NORMAL)
             block.pos = [block_x - block.size // 2, help_y + spacing]
             block.draw(self.screen)
-            self.draw_text("Normal Block (+1 point)", self.small_font, Colors.TEAL, text_x, help_y + spacing)
+            self.draw_text("Normal Block (+1 point)", self.small_font, Colors.TEAL, text_x, help_y + spacing + 10)
             
             # Harmful block
             block = Block(BlockType.HARMFUL)
             block.pos = [block_x - block.size // 2, help_y + spacing * 2]
             block.draw(self.screen)
-            self.draw_text("Harmful Block (avoid or +2 points if dodged)", self.small_font, Colors.RED, text_x, help_y + spacing * 2)
+            self.draw_text("Harmful Block (avoid or +2 points if dodged)", self.small_font, Colors.RED, text_x, help_y + spacing * 2 + 10)
             
             # Bonus block
             block = Block(BlockType.BONUS)
             block.pos = [block_x - block.size // 2, help_y + spacing * 3]
             block.draw(self.screen)
-            self.draw_text("Bonus Block (+5 points)", self.small_font, Colors.GREEN, text_x, help_y + spacing * 3)
+            self.draw_text("Bonus Block (+5 points)", self.small_font, Colors.GREEN, text_x, help_y + spacing * 3 + 10)
             
             # Power-up blocks
             power_up_x = Config.WIDTH * 3 // 4 - 50
@@ -755,26 +777,26 @@ class Game:
             block.power_up_type = PowerUpType.SHIELD
             block.pos = [power_up_x - block.size // 2, help_y + spacing]
             block.draw(self.screen)
-            self.draw_text("Shield (blocks damage)", self.small_font, Colors.LIGHT_BLUE, power_text_x, help_y + spacing)
+            self.draw_text("Shield (blocks damage)", self.small_font, Colors.LIGHT_BLUE, power_text_x, help_y + spacing + 10)
             
             # Slow time power-up
             block = Block(BlockType.POWER_UP)
             block.power_up_type = PowerUpType.SLOW_TIME
             block.pos = [power_up_x - block.size // 2, help_y + spacing * 2]
             block.draw(self.screen)
-            self.draw_text("Slow Time (reduces block speed)", self.small_font, Colors.PURPLE, power_text_x, help_y + spacing * 2)
+            self.draw_text("Slow Time (reduces block speed)", self.small_font, Colors.PURPLE, power_text_x, help_y + spacing * 2 + 10)
             
             # Magnet power-up
             block = Block(BlockType.POWER_UP)
             block.power_up_type = PowerUpType.MAGNET
             block.pos = [power_up_x - block.size // 2, help_y + spacing * 3]
             block.draw(self.screen)
-            self.draw_text("Magnet (attracts bonus items)", self.small_font, Colors.MINT, power_text_x, help_y + spacing * 3)
+            self.draw_text("Magnet (attracts bonus items)", self.small_font, Colors.MINT, power_text_x, help_y + spacing * 3 + 10)
             
             # Controls
-            controls_y = help_y + spacing * 4 + 20
+            controls_y = help_y + spacing * 4 + 30  # Increased spacing
             controls_bg = pygame.Surface((Config.WIDTH - 200, 50), pygame.SRCALPHA)
-            controls_bg.fill((0, 0, 0, 128))
+            controls_bg.fill((0, 0, 0, 180))  # Made more opaque
             self.screen.blit(controls_bg, (100, controls_y - 10))
             
             self.draw_text("Controls: ← → arrows to move   |   P to pause   |   ESC for menu", 
@@ -945,13 +967,17 @@ class Game:
 
 async def main():
     game = Game()
-    await game.run()
+    try:
+        await game.run()
+    except Exception as e:
+        print(f"Game error: {e}")
+        pygame.quit()
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except Exception as e:
-        print(f"Game crashed: {e}")
-        pygame.quit()
-        sys.exit(1)
+    asyncio.run(main())
+
+# For web platform
+if __name__ == "__main__" and hasattr(sys, "__EMSCRIPTEN__"):
+    asyncio.create_task(main())
+    asyncio.get_event_loop().run_forever()
