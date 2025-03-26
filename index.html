@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falling Blocks</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #14181f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            color: #fff;
+        }
+        #canvas {
+            border: 2px solid #333;
+            margin: 20px 0;
+        }
+        #loading {
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        .game-container {
+            text-align: center;
+        }
+        h1 {
+            color: #ffc800;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #aaa;
+            max-width: 600px;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Falling Blocks</h1>
+        <p>Dodge harmful blocks, collect power-ups, and try to get the highest score!</p>
+        <div id="loading">Loading...</div>
+        <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+        <p>Controls: Use left/right arrow keys to move, P to pause, ESC for menu</p>
+        <p>Mobile: Touch left/right side of the screen to move</p>
+    </div>
+    <script>
+        let loadingElement = document.getElementById('loading');
+        
+        // Update loading message
+        window.addEventListener('pygbag-progress', function(e) {
+            loadingElement.textContent = `Loading... ${Math.round(e.detail * 100)}%`;
+        });
+        
+        // Hide loading message when game starts
+        window.addEventListener('pygbag-start', function(e) {
+            loadingElement.style.display = 'none';
+        });
+    </script>
+</body>
+</html> 

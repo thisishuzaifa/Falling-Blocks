@@ -1,21 +1,61 @@
-# Falling-Blocks
+# Falling Blocks
 
-A simple game where you have to fall through a series of blocks.
+A fun arcade game where you dodge harmful blocks and collect power-ups to achieve the highest score!
 
-## How to play
+## Play Online
 
-1. Press SPACE to start the game.
-2. Use the arrow keys to move the player.
-3. Collect blocks to score points.
-4. Collect all the blocks to win the game.
+Visit [your-netlify-url] to play the game directly in your browser!
+
+## Features
+
+- Different types of blocks with unique behaviors
+- Power-ups (Shield, Slow Time, Magnet)
+- High score tracking
+- Mobile touch controls
+- Particle effects and animations
+
+## Local Development
+
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Run the game locally:
+```bash
+python main.py
+```
+
+3. Test web build locally:
+```bash
+python -m pygbag main.py
+```
+Then visit http://localhost:8000
+
+## Web Deployment
+
+1. Fork this repository
+2. Sign up for Netlify (https://www.netlify.com)
+3. Create a new site from Git
+4. Connect your forked repository
+5. Deploy! Netlify will automatically build and deploy your game
 
 ## Controls
 
-- Left arrow key: Move left
-- Right arrow key: Move right
-- Space: Start the game
-- P: Pause the game
-- Escape: Quit the game
+- **Desktop:**
+  - Left/Right Arrow Keys: Move
+  - P: Pause
+  - ESC: Menu
+  - Space: Start/Restart
+  - H: High Scores
+
+- **Mobile:**
+  - Touch left side: Move left
+  - Touch right side: Move right
+
+## License
+
+MIT License - Feel free to use, modify, and share!
 
 
 
